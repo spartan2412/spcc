@@ -1,0 +1,96 @@
+class MacroProcessor:
+    def __init__(self):
+        self.mnt = []
+        self.mdt = []
+        self.ala = {}
+
+    def define_macro(self, name, parameters, body):
+        mnt_entry = {"name": name, "mdt_index": len(self.mdt), "param_count": len(parameters)}
+        self.mnt.append(mnt_entry)
+        
+        mdt_entry = {
+            "name": name,
+            "parameters": parameters,
+            "body": body,
+        }
+        self.mdt.append(mdt_entry)
+
+    def expand_macro(self, name, arguments):
+        macro_entry = None
+        for entry in self.mnt:
+            if entry["name"] == name:
+                macro_entry = entry
+                break
+
+        if not macro_entry:
+            raise ValueError(f"Macro '{name}' is not defined.")
+
+        mdt_index = macro_entry["mdt_index"]
+        macro_definition = self.mdt[mdt_index]
+
+        parameters = macro_definition["parameters"]
+        body = macro_definition["body"]
+
+        if len(arguments) != len(parameters):
+            raise ValueError(f"Expected {len(parameters)} arguments, but got {len(arguments)}.")
+
+        self.ala[name] = {parameters[i]: arguments[i] for i in range(len(parameters))}
+
+        expanded_body = []
+        for line in body:
+            expanded_line = line
+            for param, arg in self.ala[name].items():
+                expanded_line = expanded_line.replace(f"&{param}", arg)
+            expanded_body.append(expanded_line)
+
+        return expanded_body
+
+    def show_mnt(self):
+        print("MNT:")
+        for entry in self.mnt:
+            print(f"  {entry}")
+
+    def show_mdt(self):
+        print("MDT:")
+        for entry in self.mdt:
+            print(f"  {entry}")
+
+    def show_ala(self):
+        print("ALA:")
+        for macro, args in self.ala.items():
+            print(f"  Macro: {macro}, Arguments: {args}")
+
+# New Macro definition
+processor = MacroProcessor()
+
+macro_name_add = "ADD"
+macro_parameters_add = ["X", "Y"]
+macro_body_add = ["LOAD &X", "ADD &Y", "STORE RESULT"]
+
+macro_name_seq = "SEQUENCE"
+macro_parameters_seq = ["A", "B", "C"]
+macro_body_seq = [
+    "MOVE &A, &B",
+    "ADD &B, &C",
+    "SUB &A, &B",
+    "MUL &C, &A",
+    "DIV &C, &B",
+]
+
+processor.define_macro(macro_name_add, macro_parameters_add, macro_body_add)
+processor.define_macro(macro_name_seq, macro_parameters_seq, macro_body_seq)
+
+expanded_add = processor.expand_macro("ADD", ["A", "B"])
+expanded_seq = processor.expand_macro("SEQUENCE", ["X", "Y", "Z"])
+
+print("Expanded ADD Macro:")
+for line in expanded_add:
+    print(f"  {line}")
+
+print("Expanded SEQUENCE Macro:")
+for line in expanded_seq:
+    print(f"  {line}")
+
+processor.show_mnt()
+processor.show_mdt()
+processor.show_ala()

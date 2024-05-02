@@ -1,0 +1,82 @@
+class MacroProcessor:
+    def __init__(self):
+        self.macros = {}
+        self.mdt = {}
+        self.mnt = {}
+        self.ala = {}
+
+    def define_macro(self, name, body, args=None):
+        self.macros[name] = body
+        self.mdt[name] = body
+        if args:
+            self.mnt[name] = (body, len(args))
+            self.ala[name] = args
+
+    def expand_macros(self, source):
+        lines = source.split('\n')
+        expanded_lines = []
+
+        for line in lines:
+            expanded_line = self.expand_line(line)
+            expanded_lines.append(expanded_line)
+
+        return '\n'.join(expanded_lines)
+
+    def expand_line(self, line):
+        tokens = line.split()
+        expanded_tokens = []
+
+        for token in tokens:
+            if token in self.macros:
+                expanded_tokens.extend(self.expand_macro(token))
+            else:
+                expanded_tokens.append(token)
+
+        return ' '.join(expanded_tokens)
+
+    def expand_macro(self, macro_name):
+        macro_body = self.macros[macro_name]
+        macro_lines = macro_body.split('\n')
+        expanded_lines = []
+
+        for macro_line in macro_lines:
+            expanded_line = self.expand_line(macro_line)
+            expanded_lines.append(expanded_line)
+
+        return expanded_lines
+
+
+# Example usage:
+if __name__ == "__main__":
+    macro_processor = MacroProcessor()
+
+    # Define macros
+    macro_processor.define_macro("LOOP", "for i in range(10):")
+    macro_processor.define_macro("PRINT_HELLO", "print('Hello, World!')")
+    macro_processor.define_macro("PRINT_N_TIMES", "for _ in range(N): print('Hello')", args=["N"])
+
+    # Source code with macros
+    source_code = """
+        LOOP
+            PRINT_HELLO
+            PRINT_N_TIMES
+    """
+
+    # Expand macros
+    expanded_code = macro_processor.expand_macros(source_code)
+
+    # Display expanded code along with MDT, MNT, and ALA tables
+    print("Expanded Code:")
+    print(expanded_code)
+
+    print("\nMacro Definition Table (MDT):")
+    for macro, body in macro_processor.mdt.items():
+        print(f"{macro}: {body}")
+
+    print("\nMacro Name Table (MNT):")
+    for macro, (body, args_count) in macro_processor.mnt.items():
+        print(f"{macro}: Body - {body}, Args Count - {args_count}")
+
+    print("\nArgument List Array (ALA):")
+    for macro, args in macro_processor.ala.items():
+        print(f"{macro}: {args}")

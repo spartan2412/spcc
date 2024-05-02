@@ -1,0 +1,51 @@
+import re
+class MacroProcessor:
+    @staticmethod
+    def first_pass(source_code):
+        symbol_table = {}
+        lines = source_code.split('\n')
+        for line in lines:
+            if line.strip().startswith("#define"):
+                parts = line.split()
+                macro_name = parts[1]
+                macro_body = ' '.join(parts[2:])
+                symbol_table[macro_name] = macro_body.strip()
+        return symbol_table
+    @staticmethod
+    def expand_macros(line, symbol_table):
+        for macro_name, macro_body in symbol_table.items():
+            pattern = re.compile(r'\b' + re.escape(macro_name) + r'\b')
+            line = re.sub(pattern, macro_body, line)
+        return line
+    @staticmethod
+    def process_file(file_path):
+        with open(file_path, 'r') as file:
+            source_code = file.read()
+        symbol_table = MacroProcessor.first_pass(source_code)
+        lines = source_code.split('\n')
+        output_lines = []
+        for line in lines:
+            if not line.strip().startswith("#define"):  # Ignore macro definitions
+                expanded_line = MacroProcessor.expand_macros(line, symbol_table)
+                output_lines.append(expanded_line)
+            else:
+                output_lines.append(line)  # Preserve macro definitions
+        processed_code = '\n'.join(output_lines)
+        return processed_code
+
+file_path = "text.txt"
+processed_code = MacroProcessor.process_file(file_path)
+print(processed_code)
+
+
+
+
+
+
+
+
+
+#define g 9.8
+float weight(float mass) {
+    return mass*g;
+}

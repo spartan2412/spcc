@@ -1,0 +1,93 @@
+class Quadruple:
+    def __init__(self, op, arg1=None, arg2=None, result=None):
+        self.op = op
+        self.arg1 = arg1
+        self.arg2 = arg2
+        self.result = result
+
+    def __str__(self):
+        return f"({self.op}, {self.arg1}, {self.arg2}, {self.result})"
+
+
+class Triple:
+    def __init__(self, op, arg1=None, arg2=None):
+        self.op = op
+        self.arg1 = arg1
+        self.arg2 = arg2
+
+    def __str__(self):
+        return f"({self.op}, {self.arg1}, {self.arg2})"
+
+
+class IntermediateCodeGenerator:
+    def __init__(self):
+        self.quadruples = []
+        self.triples = []
+        self.temp_count = 1
+
+    def generate_temp(self):
+        temp = f"t{self.temp_count}"
+        self.temp_count += 1
+        return temp
+
+    def generate_quadruple(self, op, arg1=None, arg2=None, result=None):
+        quad = Quadruple(op, arg1, arg2, result)
+        self.quadruples.append(quad)
+
+    def generate_triple(self, op, arg1=None, arg2=None):
+        triple = Triple(op, arg1, arg2)
+        self.triples.append(triple)
+
+    def generate_code(self, expression):
+        tokens = expression.split('=')
+        result = tokens[0].strip()
+        expr = tokens[1].strip()
+        self.temp_count = 1  # Reset temporary variable count for each expression
+        self._generate_code(expr, result)
+
+    def _generate_code(self, expr, result):
+        stack = []
+        op_stack = []
+        for token in expr:
+            if token.isalpha() or token.isdigit():
+                stack.append(token)
+            elif token in '+-*/':
+                op_stack.append(token)
+            elif token == ')':
+                op = op_stack.pop()
+                arg2 = stack.pop()
+                arg1 = stack.pop()
+                temp = self.generate_temp()
+                self.generate_quadruple(op, arg1, arg2, temp)
+                self.generate_triple(op, arg1, arg2)
+                stack.append(temp)
+        # Perform multiplication if there's a previous addition or subtraction operation
+        if len(op_stack) > 0 and op_stack[-1] in '*/':
+            op = op_stack.pop()
+            arg2 = stack.pop()
+            arg1 = stack.pop()
+            temp = self.generate_temp()
+            self.generate_quadruple(op, arg1, arg2, temp)
+            self.generate_triple(op, arg1, arg2)
+            stack.append(temp)
+        self.generate_quadruple('=', stack.pop(), None, result)
+
+    def display_quadruples(self):
+        print("Quadruples:")
+        for quad in self.quadruples:
+            print(quad)
+
+    def display_triples(self):
+        print("\nTriples:")
+        for triple in self.triples:
+            print(triple)
+
+
+if __name__ == "__main__":
+    generator = IntermediateCodeGenerator()
+    # Example expression
+    # expression = "a = (e - b) * (c + d)"
+    expression = input("enter the expression")
+    generator.generate_code(expression)
+    generator.display_quadruples()
+    generator.display_triples()

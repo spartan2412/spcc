@@ -1,0 +1,103 @@
+class MOT:
+    def __init__(self):
+        self.instructions = {
+            "LOAD": {"opcode": "00", "operands": 1},
+            "STORE": {"opcode": "01", "operands": 1},
+            "ADD": {"opcode": "02", "operands": 1},
+            "SUB": {"opcode": "03", "operands": 1},
+            "MULT": {"opcode": "04", "operands": 1},
+            "DIV": {"opcode": "05", "operands": 1},
+            "JUMP": {"opcode": "06", "operands": 1},
+            "HLT": {"opcode": "07", "operands": 0}
+        }
+    def get_instruction(self, mnemonic):
+        return self.instructions.get(mnemonic, None)
+class POT:
+    def __init__(self):
+        self.pseudo_ops = {
+            "START": {"opcode": "", "operands": 1},
+            "END": {"opcode": "", "operands": 0},
+            "DC": {"opcode": "", "operands": 1},
+            "DS": {"opcode": "", "operands": 1},
+            "USING": {"opcode": "", "operands": 2}  # Added USING as a pseudo-op with two operands
+        }
+    def get_pseudo_op(self, mnemonic):
+        return self.pseudo_ops.get(mnemonic, None)
+class SymbolTable:
+    def __init__(self):
+        self.table = {}
+    def add_symbol(self, symbol, address):
+        self.table[symbol] = address
+    def get_symbol_address(self, symbol):
+        return self.table.get(symbol, None)
+class Assembler:
+    def __init__(self):
+        self.mot = MOT()
+        self.pot = POT()
+        self.st = SymbolTable()
+    def assemble(self, source_code):
+        machine_code = []
+        address = 0
+        for line in source_code:
+            parts = line.split()
+            mnemonic = parts[0]
+            if mnemonic in self.mot.instructions:
+                instruction = self.mot.get_instruction(mnemonic)
+                if instruction['operands'] == 1:
+                    operands = parts[1:]
+                    if len(operands) != instruction['operands']:
+                        raise ValueError(f"Invalid number of operands for {mnemonic} instruction.")
+                    machine_code.append(instruction['opcode'] + ''.join(operands))
+                elif instruction['operands'] == 2:
+                    operands = parts[1].split(',')
+                    if len(operands) != instruction['operands']:
+                        raise ValueError(f"Invalid number of operands for {mnemonic} instruction.")
+                    machine_code.append(instruction['opcode'] + ''.join(operands))
+            elif mnemonic in self.pot.pseudo_ops:
+                pseudo_op = self.pot.get_pseudo_op(mnemonic)
+                if mnemonic == "START":
+                    address = int(parts[1])
+                elif mnemonic == "END":
+                    break
+                elif mnemonic == "DC":
+                    machine_code.append(parts[1])
+                elif mnemonic == "DS":
+                    address += int(parts[1])
+                elif mnemonic == "USING":
+                    continue  # Ignore USING instruction for now
+                else:
+                    raise ValueError(f"Unknown pseudo-operation: {mnemonic}")
+            else:
+                if mnemonic not in self.st.table:
+                    self.st.add_symbol(mnemonic, address)
+                else:
+                    raise ValueError(f"Duplicate symbol found: {mnemonic}")
+        return machine_code
+    def print_pseudo_op_table(self):
+        print("Pseudo Operation Table:")
+        for op, info in self.pot.pseudo_ops.items():
+            print(f"Mnemonic: {op}, Opcode: {info['opcode']}, Operands: {info['operands']}")
+    def print_symbol_table(self):
+        print("Symbol Table:")
+        for symbol, address in self.st.table.items():
+            print(f"Symbol: {symbol}, Address: {address}")
+# Example usage
+source_code = [
+    "PG1 START 0",
+    "USING *,15",
+    "LOAD FOUR",
+    "STORE FIVE",
+    "ADD FOUR",
+    "FOUR DC 5",
+    "FIVE DC 5",
+    "TEMP DS 1",
+    "END"
+]
+assembler = Assembler()
+machine_code = assembler.assemble(source_code)
+print("MOT:")
+for code in machine_code:
+    print(code)
+
+assembler.print_pseudo_op_table()
+assembler.print_symbol_table()

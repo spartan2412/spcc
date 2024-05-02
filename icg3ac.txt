@@ -1,0 +1,59 @@
+import secrets
+stack = []
+ans = []
+# equation = "a=(b+c+d)"
+equation = input("Enter the expression")
+# equation = "a=((c*d)+(a+b)+(a+b))"
+# equation = "a=((b+(c*d))/e)"
+g_left = equation[0]
+equation = equation[2:]
+t = 1
+
+def generate_random_special_character():
+    special_characters = "!@#$&_<>?[]|"
+    return secrets.choice(special_characters)
+map = {}
+def replacement(right):
+    for key, value in map.items():
+        right = right.replace(value, key)
+    return right
+def solve(eq):
+    global t
+    precedence = ['*', '/', '+', '-']
+    for op in precedence:
+        for i in range(len(eq)):
+            ch = eq[i]
+            if ch == op:
+                t = str(t)
+                left = 't' + t
+                right = eq[i - 1] + op + eq[i + 1]
+                right = replacement(right)
+                ans.append(left + '=' + right)
+                t = int(t)
+                t = t + 1
+                random = generate_random_special_character()
+                while random in map.keys():
+                    random = generate_random_special_character()
+                map[left] = random
+                eq = eq[:i - 1] + map[left] + eq[i + 2:]
+                break
+    return eq
+for ch in equation:
+    if ch == '(':
+        stack.append(ch)
+    elif ch == ')':
+        eq = ''
+        while stack[-1] != '(':
+            eq = stack.pop() + eq
+        opening = stack.pop()
+        res = solve(eq)
+        while(len(res) > 1):
+            res = solve(res)
+        stack.append(res)
+    else:
+        stack.append(ch)
+while len(ans) != 0:
+    pr = ans.pop(0)
+    print(pr)
+final = g_left + '=' + pr[:2]
+print(final)

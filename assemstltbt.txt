@@ -1,0 +1,62 @@
+class SymbolTable:
+    def __init__(self):
+        self.table = {}
+    def add_symbol(self, symbol, address):
+        self.table[symbol] = address
+    def get_symbol_address(self, symbol):
+        return self.table.get(symbol, None)
+    def print_table(self):
+        print("Symbol Table:")
+        for symbol, address in self.table.items():
+            print(f"Symbol: {symbol}, Address: {address}")
+class LiteralTable:
+    def __init__(self):
+        self.table = {}
+    def add_literal(self, literal, address):
+        self.table[literal] = address
+    def get_literal_address(self, literal):
+        return self.table.get(literal, None)
+    def print_table(self):
+        print("Literal Table:")
+        for literal, address in self.table.items():
+            print(f"Literal: {literal}, Address: {address}")
+class BaseTable:
+    def __init__(self):
+        self.table = {}
+    def add_base(self, base_register, base_address):
+        self.table[base_register] = base_address
+    def get_base_address(self, base_register):
+        return self.table.get(base_register, None)
+    def print_table(self):
+        print("Base Table:")
+        for base_register, base_address in self.table.items():
+            print(f"Base Register: {base_register}, Base Address: {base_address}")
+def process_directives(source_code):
+    symbol_table = SymbolTable()
+    literal_table = LiteralTable()
+    base_table = BaseTable()
+    for line in source_code:
+        parts = line.split()
+        directive = parts[0]
+        if directive == "ST":
+            symbol_table.add_symbol(parts[1], int(parts[2]))
+        elif directive == "LT":
+            literal_table.add_literal(parts[1], int(parts[2]))
+        elif directive == "BT":
+            base_table.add_base(parts[1], int(parts[2]))
+        elif directive == "=":
+            literal = parts[0]
+            value = int(parts[1][1:])  # Remove the '=' and parse the value
+            literal_table.add_literal(literal, value)
+    symbol_table.print_table()
+    literal_table.print_table()
+    base_table.print_table()
+# Example usage
+source_code = [
+    "ST A 100",
+    "ST B 200",
+    "LT =1 300",
+    "LT =2 400",
+    "BT BASE 500"
+]
+process_directives(source_code)

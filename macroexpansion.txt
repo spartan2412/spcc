@@ -1,0 +1,41 @@
+def first_pass(macros):
+    macro_table = {}
+
+    for macro in macros:
+        name, *definition = macro.split()
+        macro_table[name] = definition
+
+    return macro_table
+
+def expand_macros(source_code, macro_table):
+    expanded_code = []
+
+    for line in source_code:
+        parts = line.split()
+        if parts[0] in macro_table:
+            expanded_code.extend(macro_table[parts[0]])
+        else:
+            expanded_code.append(line)
+
+    return expanded_code
+
+macros = [
+    'MACRO1 LOAD A',
+    'MACRO2 ADD B',
+    'MACRO3 SUB C',
+]
+
+source_code = [
+    'START',
+    'MACRO1',
+    'MACRO2',
+    'MACRO3',
+    'END'
+]
+
+macro_table = first_pass(macros)
+expanded_code = expand_macros(source_code, macro_table)
+
+print("Expanded Code:")
+for line in expanded_code:
+    print(line)

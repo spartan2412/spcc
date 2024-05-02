@@ -1,0 +1,87 @@
+from tabulate import tabulate  # To format tables
+
+class MacroProcessor:
+    def __init__(self):
+        self.mnt = []
+        self.mdt = []
+        self.ala = []
+    
+    def define_macro(self, macro_name, macro_body, macro_args):
+        mnt_entry = {
+            'Index': len(self.mnt) + 1,
+            'MacroName': macro_name,
+            'MDT_Index': len(self.mdt) + 1
+        }
+        self.mnt.append(mnt_entry)
+        
+        for line in macro_body:
+            mdt_entry = {
+                'Index': len(self.mdt) + 1,
+                'Macro_Definition': line
+            }
+            self.mdt.append(mdt_entry)
+        
+        for arg in macro_args:
+            ala_entry = {
+                'Index': len(self.ala) + 1,
+                'Argument': arg
+            }
+            self.ala.append(ala_entry)
+    
+    def list_tables(self):
+        print("Macro Name Table (MNT):")
+        print(tabulate(self.mnt, headers="keys", tablefmt="grid"))
+        
+        print("\nMacro Definition Table (MDT):")
+        print(tabulate(self.mdt, headers="keys", tablefmt="grid"))
+        
+        print("\nArgument List Array (ALA):")
+        print(tabulate(self.ala, headers="keys", tablefmt="grid"))
+    
+    def process_macro(self, macro_name, arg_lists):
+        mnt_entry = next((entry for entry in self.mnt if entry['MacroName'] == macro_name), None)
+        if not mnt_entry:
+            print(f"Macro '{macro_name}' not found!")
+            return
+        
+        mdt_index = mnt_entry['MDT_Index']
+        mdt_entries = self.mdt[mdt_index - 1:]
+        
+        macro_body = []
+        for entry in mdt_entries:
+            if "MEND" in entry['Macro_Definition']:
+                break
+            macro_body.append(entry['Macro_Definition'])
+        
+        expanded_macros = []
+        for arg_values in arg_lists:
+            expanded_macro = []
+            for line in macro_body:
+                if line.startswith("MACRO"):
+                    continue
+                expanded_line = line
+                for arg_name, arg_value in zip(macro_args, arg_values):
+                    expanded_line = expanded_line.replace(arg_name, arg_value)
+                expanded_macro.append(expanded_line)
+            
+            expanded_macros.append(expanded_macro)
+
+        for expanded_macro in expanded_macros:
+            for line in expanded_macro:
+                print(line)
+
+processor = MacroProcessor()
+
+macro_body = ["MACRO INCR &ARG1, &ARG2", "A 1, &ARG1", "A 2, &ARG2", "MEND"]
+macro_args = ["&ARG1", "&ARG2"]
+processor.define_macro("INCR", macro_body, macro_args)
+
+processor.list_tables()
+
+arg_lists = [
+    ["DATA1", "DATA2"],
+    ["DATA3", "DATA4"]
+]
+
+processor.process_macro("INCR", arg_lists)
+

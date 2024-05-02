@@ -1,0 +1,21 @@
+def optimize_code(operations):
+    optimizer = []
+
+    for i in range(len(operations)):
+        operations[i] = operations[i].split('=')
+
+    for i in range(len(operations)):
+        for j in range(i + 1, len(operations)):
+            if operations[i][1] in operations[j][1]:
+                operations[j][1] = operations[i][0]
+        optimizer.append(operations[i][0] + ' = ' + operations[i][1])
+    return optimizer
+
+n = int(input('Enter number of operations: '))
+
+operations = [input() for _ in range(n)]
+
+optimized_code = optimize_code(operations)
+
+for line in optimized_code:
+    print(line)
